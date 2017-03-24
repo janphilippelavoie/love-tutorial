@@ -2,15 +2,20 @@ debug = true
 
 isAlive = true
 score = 0
+level = 1
+drawLevelTimer = 1.0
 canShoot = true
 canShootTimerMax = 0.5
 canShootTimer = 0
 bulletSpeed = 1000
 bullets = {}
 enemies = {}
-enemySpawnRate = 1
+enemyInitialSpawnRate = 1.0
+enemyInitialSpeed = 300
+enemySpawnRate = enemyInitialSpawnRate
+enemySpeed = enemyInitialSpeed
 enemySpawnTimer = 0
-enemySpeed = 300
+
 
 function love.load(arg)
   player = { x = 200, y = 710, speed = 350,  img = nil }
@@ -25,15 +30,20 @@ function love.update(dt)
   controls(dt)
   spawnEnemies(dt)
   moveEnemies(dt)
+  checkLevel(dt)
   checkCollisions()
 end
 
-function love.draw(dt)
+function love.draw()
   if isAlive then
     love.graphics.draw(player.img, player.x, player.y)
   else
     love.graphics.printf("Game over :(, press enter to play again",
      0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
+  end
+  if drawLevelTimer > 0 then
+    love.graphics.printf(string.format("Level %d", level),
+          0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
   end
   for i, bullet in ipairs(bullets) do
     love.graphics.draw(bullet.img, bullet.x, bullet.y)
@@ -42,6 +52,22 @@ function love.draw(dt)
     love.graphics.draw(enemy.img, enemy.x, enemy.y, math.pi, 1, 1, enemy.img:getWidth(), enemy.img:getHeight())
   end
   love.graphics.printf(score, 0, 0, love.graphics.getWidth(), "right", 0)
+end
+
+function checkLevel(dt)
+  if drawLevelTimer > 0 then
+    drawLevelTimer = drawLevelTimer - dt
+  end
+  if score >= level * 100 then
+    enemySpawnRate = enemySpawnRate - 0.1
+    if enemySpawnRate < 0 then
+      enemySpawnRate = 0
+    end
+    enemySpeed = enemySpeed + 20
+    level = level + 1
+    drawLevelTimer = 1
+    print(string.format("level: %d  enemySpeed: %f enemySpawnRate: %f", level, enemySpeed, enemySpawnRate))
+  end
 end
 
 function spawnEnemies(dt)
@@ -80,7 +106,6 @@ end
 
 function checkCanShoot(dt)
   if not canShoot then
-    print(canShootTimer)
     if canShootTimer < 0 then
       canShoot = true
     else
@@ -156,6 +181,8 @@ function reset()
   bullets = {}
   score = 0
   isAlive = true
+  enemySpawnRate = enemyInitialSpawnRate
+  enemySpeed = enemyInitialSpeed
 end
 
 function isColliding(x1,y1,w1,h1, x2,y2,w2,h2)
