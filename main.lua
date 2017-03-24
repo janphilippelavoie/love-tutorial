@@ -32,8 +32,8 @@ function love.draw(dt)
   if isAlive then
     love.graphics.draw(player.img, player.x, player.y)
   else
-    love.graphics.print("Game over :(, press enter to play again",
-     0, love.graphics.getHeight()/2, 0, 2, 2)
+    love.graphics.printf("Game over :(, press enter to play again",
+     0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
   end
   for i, bullet in ipairs(bullets) do
     love.graphics.draw(bullet.img, bullet.x, bullet.y)
@@ -41,7 +41,7 @@ function love.draw(dt)
   for i, enemy in ipairs(enemies) do
     love.graphics.draw(enemy.img, enemy.x, enemy.y, math.pi, 1, 1, enemy.img:getWidth(), enemy.img:getHeight())
   end
-  love.graphics.print(score, love.graphics.getWidth() - 75, 0, 0, 5, 5)
+  love.graphics.printf(score, 0, 0, love.graphics.getWidth(), "right", 0)
 end
 
 function spawnEnemies(dt)
