@@ -1,5 +1,7 @@
 debug = true
 
+isAlive = true
+score = 0
 canShoot = true
 canShootTimerMax = 0.5
 canShootTimer = 0
@@ -8,7 +10,7 @@ bullets = {}
 enemies = {}
 enemySpawnRate = 1
 enemySpawnTimer = 0
-enemySpeed = 100
+enemySpeed = 300
 
 function love.load(arg)
   player = { x = 200, y = 710, speed = 350,  img = nil }
@@ -23,16 +25,23 @@ function love.update(dt)
   controls(dt)
   spawnEnemies(dt)
   moveEnemies(dt)
+  checkCollisions()
 end
 
 function love.draw(dt)
-  love.graphics.draw(player.img, player.x, player.y)
+  if isAlive then
+    love.graphics.draw(player.img, player.x, player.y)
+  else
+    love.graphics.print("Game over :(, press enter to play again",
+     0, love.graphics.getHeight()/2, 0, 2, 2)
+  end
   for i, bullet in ipairs(bullets) do
     love.graphics.draw(bullet.img, bullet.x, bullet.y)
   end
   for i, enemy in ipairs(enemies) do
-    love.graphics.draw(enemy.img, enemy.x, enemy.y, 0, 1, -1)
+    love.graphics.draw(enemy.img, enemy.x, enemy.y, math.pi, 1, 1, enemy.img:getWidth(), enemy.img:getHeight())
   end
+  love.graphics.print(score, love.graphics.getWidth() - 75, 0, 0, 5, 5)
 end
 
 function spawnEnemies(dt)
@@ -42,7 +51,6 @@ function spawnEnemies(dt)
       y = 0,
       img = enemyImage
     }
-    print(enemy.x)
     table.insert(enemies, enemy)
     enemySpawnTimer = enemySpawnRate
   else
@@ -101,6 +109,10 @@ function controls(dt)
   if love.keyboard.isDown(' ') then
     shoot()
   end
+
+  if love.keyboard.isDown('return') and not isAlive then
+    reset()
+  end
 end
 
 function shoot()
@@ -116,7 +128,37 @@ function shoot()
   end
 end
 
-function checkCollision(x1,y1,w1,h1, x2,y2,w2,h2)
+function checkCollisions()
+  for enemyIndex, enemy in ipairs(enemies) do
+    if isColliding(
+      enemy.x, enemy.y, enemy.img:getWidth(), enemy.img:getHeight(),
+      player.x, player.y, player.img:getWidth(), player.img:getHeight()
+    ) then
+      isAlive = false
+      table.remove(enemies, enemyIndex)
+    end
+    for bulletIndex, bullet in ipairs(bullets) do
+      if isColliding(
+      enemy.x, enemy.y, enemy.img:getWidth(), enemy.img:getHeight(),
+      bullet.x, bullet.y, bullet.img:getWidth(), bullet.img:getHeight()
+      ) then
+        table.remove(enemies, enemyIndex)
+        table.remove(bullets, bulletIndex)
+        score = score + 10
+      end
+    end
+  end
+end
+
+function reset()
+  print(reset)
+  enemies = {}
+  bullets = {}
+  score = 0
+  isAlive = true
+end
+
+function isColliding(x1,y1,w1,h1, x2,y2,w2,h2)
   return x1 < x2+w2 and
          x2 < x1+w1 and
          y1 < y2+h2 and
